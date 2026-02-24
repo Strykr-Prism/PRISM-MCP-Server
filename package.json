@@ -1,6 +1,6 @@
 {
   "name": "@prism/mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "PRISM OS MCP Server — 21 financial-data tools for Claude Desktop & Claude Code",
   "main": "dist/index.js",
   "bin": {
