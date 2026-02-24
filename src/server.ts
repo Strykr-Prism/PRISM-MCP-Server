@@ -8,6 +8,7 @@ import { registerNewsTools } from "./tools/news.js";
 import { registerPredictionTools } from "./tools/predictions.js";
 import { registerMacroTools } from "./tools/macro.js";
 import { registerDeveloperTools } from "./tools/developer.js";
+import { registerScaffoldTools } from "./tools/scaffold.js";
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -24,6 +25,7 @@ export function createServer(): McpServer {
   registerPredictionTools(server);
   registerMacroTools(server);
   registerDeveloperTools(server);
+  registerScaffoldTools(server);
 
   return server;
 }
