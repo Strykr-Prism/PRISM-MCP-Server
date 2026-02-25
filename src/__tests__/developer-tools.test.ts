@@ -1,6 +1,8 @@
 /**
  * Tests for OpenClaw-first MCP developer tools.
  * 
+ * Uses official MCP SDK testing pattern with InMemoryTransport.
+ * 
  * Tests:
  * - get_api_key tool
  * - check_usage tool
@@ -8,8 +10,10 @@
  * - verify_key tool
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { registerDeveloperTools } from '../tools/developer';
 
 // Mock the prism client
@@ -28,15 +32,48 @@ vi.mock('../client.js', () => ({
 global.fetch = vi.fn();
 
 describe('MCP Developer Tools', () => {
-  let server: McpServer;
+  let server: Server;
+  let client: Client;
+  let clientTransport: InMemoryTransport;
+  let serverTransport: InMemoryTransport;
 
-  beforeEach(() => {
-    server = new McpServer({
-      name: 'test-prism-mcp',
-      version: '1.0.0'
-    });
+  beforeEach(async () => {
+    // Create in-memory transport pair
+    [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+    // Create and connect server
+    server = new Server(
+      {
+        name: 'test-prism-mcp',
+        version: '1.0.0'
+      },
+      {
+        capabilities: {
+          tools: {}
+        }
+      }
+    );
     registerDeveloperTools(server);
+    await server.connect(serverTransport);
+
+    // Create and connect client
+    client = new Client(
+      {
+        name: 'test-client',
+        version: '1.0.0'
+      },
+      {
+        capabilities: {}
+      }
+    );
+    await client.connect(clientTransport);
+
     vi.clearAllMocks();
+  });
+
+  afterEach(async () => {
+    await client.close();
+    await server.close();
   });
 
   describe('get_api_key tool', () => {
@@ -57,18 +94,19 @@ describe('MCP Developer Tools', () => {
         json: async () => mockResponse
       });
 
-      // Use the underlying server's request handler
-      const listToolsHandler = (server.server as any)._requestHandlers.get('tools/list');
-      const tools = await listToolsHandler({});
-      const getApiKeyTool = tools.tools.find((t: any) => t.name === 'get_api_key');
+      // List tools to verify registration
+      const tools = await client.listTools();
+      const getApiKeyTool = tools.tools.find(t => t.name === 'get_api_key');
       
       expect(getApiKeyTool).toBeDefined();
       expect(getApiKeyTool?.description).toContain('instant');
       expect(getApiKeyTool?.description).toContain('no signup');
 
-      // Execute the tool via CallTool handler
-      const callToolHandler = (server.server as any)._requestHandlers.get('tools/call');
-      const result = await callToolHandler({ params: { name: 'get_api_key', arguments: {} } });
+      // Execute the tool
+      const result = await client.callTool({
+        name: 'get_api_key',
+        arguments: {}
+      });
       
       expect(result.content[0].type).toBe('text');
       const content = JSON.parse((result.content[0] as any).text);
@@ -89,20 +127,18 @@ describe('MCP Developer Tools', () => {
         status: 500,
         statusText: 'Internal Server Error'
       });
-
-      const callToolHandler = (server.server as any)._requestHandlers.get('tools/call');
       
       await expect(
-        callToolHandler({ params: { name: 'get_api_key', arguments: {} } })
+        client.callTool({ name: 'get_api_key', arguments: {} })
       ).rejects.toThrow('Failed to get instant key');
     });
 
     it('should be marked as non-read-only', async () => {
-      const listToolsHandler = (server.server as any)._requestHandlers.get('tools/list');
-      const tools = await listToolsHandler({});
-      const getApiKeyTool = tools.tools.find((t: any) => t.name === 'get_api_key');
+      const tools = await client.listTools();
+      const getApiKeyTool = tools.tools.find(t => t.name === 'get_api_key');
       
-      expect(getApiKeyTool?.annotations?.readOnlyHint).toBe(false);
+      // Non-read-only tools should have readOnlyHint false or undefined
+      expect(getApiKeyTool?.annotations?.readOnlyHint).toBeFalsy();
     });
   });
 
@@ -115,8 +151,10 @@ describe('MCP Developer Tools', () => {
         requests_per_minute_limit: 300
       });
 
-      const callToolHandler = (server.server as any)._requestHandlers.get('tools/call');
-      const result = await callToolHandler({ params: { name: 'check_usage', arguments: {} } });
+      const result = await client.callTool({
+        name: 'check_usage',
+        arguments: {}
+      });
       
       expect(result.content[0].type).toBe('text');
       const content = JSON.parse((result.content[0] as any).text);
@@ -125,9 +163,8 @@ describe('MCP Developer Tools', () => {
     });
 
     it('should be marked as read-only', async () => {
-      const listToolsHandler = (server.server as any)._requestHandlers.get('tools/list');
-      const tools = await listToolsHandler({});
-      const checkUsageTool = tools.tools.find((t: any) => t.name === 'check_usage');
+      const tools = await client.listTools();
+      const checkUsageTool = tools.tools.find(t => t.name === 'check_usage');
       
       expect(checkUsageTool?.annotations?.readOnlyHint).toBe(true);
     });
@@ -140,8 +177,10 @@ describe('MCP Developer Tools', () => {
         tiers: { free: { qps: 1 }, pro: { qps: 300 } }
       });
 
-      const callToolHandler = (server.server as any)._requestHandlers.get('tools/call');
-      const result = await callToolHandler({ params: { name: 'check_tiers', arguments: {} } });
+      const result = await client.callTool({
+        name: 'check_tiers',
+        arguments: {}
+      });
       
       expect(result.content[0].type).toBe('text');
       const content = JSON.parse((result.content[0] as any).text);
@@ -149,9 +188,8 @@ describe('MCP Developer Tools', () => {
     });
 
     it('should be marked as read-only', async () => {
-      const listToolsHandler = (server.server as any)._requestHandlers.get('tools/list');
-      const tools = await listToolsHandler({});
-      const checkTiersTool = tools.tools.find((t: any) => t.name === 'check_tiers');
+      const tools = await client.listTools();
+      const checkTiersTool = tools.tools.find(t => t.name === 'check_tiers');
       
       expect(checkTiersTool?.annotations?.readOnlyHint).toBe(true);
     });
@@ -166,9 +204,9 @@ describe('MCP Developer Tools', () => {
         expires_at: '2027-01-01'
       });
 
-      const callToolHandler = (server.server as any)._requestHandlers.get('tools/call');
-      const result = await callToolHandler({
-        params: { name: 'verify_key', arguments: { key: 'prism_sk_test_123' } }
+      const result = await client.callTool({
+        name: 'verify_key',
+        arguments: { key: 'prism_sk_test_123' }
       });
       
       expect(result.content[0].type).toBe('text');
@@ -184,9 +222,9 @@ describe('MCP Developer Tools', () => {
         message: 'Invalid key'
       });
 
-      const callToolHandler = (server.server as any)._requestHandlers.get('tools/call');
-      const result = await callToolHandler({
-        params: { name: 'verify_key', arguments: { key: 'invalid_key' } }
+      const result = await client.callTool({
+        name: 'verify_key',
+        arguments: { key: 'invalid_key' }
       });
       
       expect(result.content[0].type).toBe('text');
@@ -195,18 +233,16 @@ describe('MCP Developer Tools', () => {
     });
 
     it('should require key parameter', async () => {
-      const listToolsHandler = (server.server as any)._requestHandlers.get('tools/list');
-      const tools = await listToolsHandler({});
-      const verifyKeyTool = tools.tools.find((t: any) => t.name === 'verify_key');
+      const tools = await client.listTools();
+      const verifyKeyTool = tools.tools.find(t => t.name === 'verify_key');
       
       expect(verifyKeyTool?.inputSchema).toBeDefined();
       expect(verifyKeyTool?.inputSchema.required).toContain('key');
     });
 
     it('should be marked as read-only', async () => {
-      const listToolsHandler = (server.server as any)._requestHandlers.get('tools/list');
-      const tools = await listToolsHandler({});
-      const verifyKeyTool = tools.tools.find((t: any) => t.name === 'verify_key');
+      const tools = await client.listTools();
+      const verifyKeyTool = tools.tools.find(t => t.name === 'verify_key');
       
       expect(verifyKeyTool?.annotations?.readOnlyHint).toBe(true);
     });
@@ -214,10 +250,9 @@ describe('MCP Developer Tools', () => {
 
   describe('Tool registration', () => {
     it('should register all 4 new developer tools', async () => {
-      const listToolsHandler = (server.server as any)._requestHandlers.get('tools/list');
-      const tools = await listToolsHandler({});
+      const tools = await client.listTools();
       
-      const developerTools = tools.tools.filter((t: any) => 
+      const developerTools = tools.tools.filter(t => 
         ['get_api_key', 'check_usage', 'check_tiers', 'verify_key'].includes(t.name)
       );
       
@@ -225,10 +260,9 @@ describe('MCP Developer Tools', () => {
     });
 
     it('should still have api_health tool', async () => {
-      const listToolsHandler = (server.server as any)._requestHandlers.get('tools/list');
-      const tools = await listToolsHandler({});
+      const tools = await client.listTools();
       
-      const healthTool = tools.tools.find((t: any) => t.name === 'api_health');
+      const healthTool = tools.tools.find(t => t.name === 'api_health');
       expect(healthTool).toBeDefined();
     });
   });
@@ -247,8 +281,10 @@ describe('MCP Developer Tools', () => {
         })
       });
 
-      const callToolHandler = (server.server as any)._requestHandlers.get('tools/call');
-      const keyResult = await callToolHandler({ params: { name: 'get_api_key', arguments: {} } });
+      const keyResult = await client.callTool({
+        name: 'get_api_key',
+        arguments: {}
+      });
       const keyContent = JSON.parse((keyResult.content[0] as any).text);
       
       expect(keyContent.api_key).toBe('prism_sk_test_workflow');
@@ -260,8 +296,9 @@ describe('MCP Developer Tools', () => {
         tier: 'agent'
       });
 
-      const verifyResult = await callToolHandler({
-        params: { name: 'verify_key', arguments: { key: keyContent.api_key } }
+      const verifyResult = await client.callTool({
+        name: 'verify_key',
+        arguments: { key: keyContent.api_key }
       });
       const verifyContent = JSON.parse((verifyResult.content[0] as any).text);
       
@@ -273,7 +310,10 @@ describe('MCP Developer Tools', () => {
         tiers: { agent: { rpm: 5 }, pro: { rpm: 300 } }
       });
 
-      const tiersResult = await callToolHandler({ params: { name: 'check_tiers', arguments: {} } });
+      const tiersResult = await client.callTool({
+        name: 'check_tiers',
+        arguments: {}
+      });
       const tiersContent = JSON.parse((tiersResult.content[0] as any).text);
       
       expect(tiersContent.tiers).toBeDefined();
