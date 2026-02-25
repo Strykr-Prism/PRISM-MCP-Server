@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 import { prism } from "../client.js";
 import { RENDER_HINTS } from "../render-hints.js";
 
@@ -70,14 +71,7 @@ export function registerDeveloperTools(server: McpServer) {
     {
       description: "Verify if a PRISM API key is valid and get its details (tier, expiry). Useful for checking if a key is still active before making requests.",
       inputSchema: {
-        type: "object",
-        properties: {
-          key: {
-            type: "string",
-            description: "The PRISM API key to verify (format: prism_sk_...)",
-          },
-        },
-        required: ["key"],
+        key: z.string().describe("The PRISM API key to verify (format: prism_sk_...)"),
       },
       annotations: { readOnlyHint: true },
     },

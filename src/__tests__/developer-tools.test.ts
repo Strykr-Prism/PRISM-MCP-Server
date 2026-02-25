@@ -113,7 +113,7 @@ describe('MCP Developer Tools', () => {
         created_at: '2026-01-01T00:00:00Z'
       };
 
-      const { prism } = await import('../src/client.js');
+      const { prism } = await import('../client.js');
       (prism.developer.getUsageStats as any).mockResolvedValueOnce(mockUsageStats);
 
       const result = await server.callTool('check_usage', {});
@@ -148,7 +148,7 @@ describe('MCP Developer Tools', () => {
         anonymous_tier: 'anonymous'
       };
 
-      const { prism } = await import('../src/client.js');
+      const { prism } = await import('../client.js');
       (prism.developer.getTiers as any).mockResolvedValueOnce(mockTiers);
 
       const result = await server.callTool('check_tiers', {});
@@ -179,7 +179,7 @@ describe('MCP Developer Tools', () => {
         message: 'API key is valid'
       };
 
-      const { prism } = await import('../src/client.js');
+      const { prism } = await import('../client.js');
       (prism.developer.verifyKey as any).mockResolvedValueOnce(mockVerification);
 
       const result = await server.callTool('verify_key', {
@@ -199,7 +199,7 @@ describe('MCP Developer Tools', () => {
         message: 'API key is invalid or expired'
       };
 
-      const { prism } = await import('../src/client.js');
+      const { prism } = await import('../client.js');
       (prism.developer.verifyKey as any).mockResolvedValueOnce(mockVerification);
 
       const result = await server.callTool('verify_key', {
@@ -264,7 +264,7 @@ describe('MCP Developer Tools', () => {
       expect(keyData.api_key).toBe('prism_sk_agent_workflow_123');
 
       // Step 2: Verify the key
-      const { prism } = await import('../src/client.js');
+      const { prism } = await import('../client.js');
       (prism.developer.verifyKey as any).mockResolvedValueOnce({
         valid: true,
         tier: 'agent'
