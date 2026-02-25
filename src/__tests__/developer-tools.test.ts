@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { registerDeveloperTools } from '../tools/developer';
@@ -32,7 +32,7 @@ vi.mock('../client.js', () => ({
 global.fetch = vi.fn();
 
 describe('MCP Developer Tools', () => {
-  let server: Server;
+  let server: McpServer;
   let client: Client;
   let clientTransport: InMemoryTransport;
   let serverTransport: InMemoryTransport;
@@ -41,18 +41,11 @@ describe('MCP Developer Tools', () => {
     // Create in-memory transport pair
     [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
 
-    // Create and connect server
-    server = new Server(
-      {
-        name: 'test-prism-mcp',
-        version: '1.0.0'
-      },
-      {
-        capabilities: {
-          tools: {}
-        }
-      }
-    );
+    // Create and connect server with McpServer (high-level API)
+    server = new McpServer({
+      name: 'test-prism-mcp',
+      version: '1.0.0'
+    });
     registerDeveloperTools(server);
     await server.connect(serverTransport);
 
@@ -128,9 +121,9 @@ describe('MCP Developer Tools', () => {
         statusText: 'Internal Server Error'
       });
       
-      await expect(
-        client.callTool({ name: 'get_api_key', arguments: {} })
-      ).rejects.toThrow('Failed to get instant key');
+      const result = await client.callTool({ name: 'get_api_key', arguments: {} });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Failed to get instant key');
     });
 
     it('should be marked as non-read-only', async () => {
