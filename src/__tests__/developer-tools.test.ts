@@ -10,10 +10,10 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { registerDeveloperTools } from '../src/tools/developer';
+import { registerDeveloperTools } from '../tools/developer';
 
 // Mock the prism client
-vi.mock('../src/client.js', () => ({
+vi.mock('../client.js', () => ({
   prism: {
     developer: {
       getUsageStats: vi.fn(),
