@@ -2,6 +2,20 @@
 
 > **Comprehensive financial intelligence for AI agents**
 
+## 🎫 Hackathon
+
+PRISM is sponsoring with **$5,000 in API credits**! Each participant gets **$10 in credits** (1,000 API calls). 500 spots available, first come first served.
+
+**Redeem your code** at [prismapi.ai/hackathon](https://prismapi.ai/hackathon), then use the MCP tools below to check your balance:
+
+| Tool | Description | Auth Required |
+|------|-------------|---------------|
+| `hackathon_status` | Check pool status (spots remaining, active status) | No |
+| `hackathon_redeem` | Redeem a hackathon code for API credits | Yes |
+| `hackathon_my_credits` | Check your credit balance and usage | Yes |
+
+---
+
 MCP (Model Context Protocol) server exposing **100+ financial data tools** powered by the [PRISM OS SDK](https://github.com/Strykr-Prism/PRISM-OS-SDK). Works with Claude Desktop, Cursor IDE, and any MCP-compatible client.
 
 **218 API endpoints** across crypto, stocks, DeFi, macro, predictions, sports, and more — all in one unified interface.
@@ -74,6 +88,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 | **Odds** | 6 | Arbitrage, odds comparison, best odds |
 | **Developer** | 1 | API health and key verification |
 | **Scaffold** | 1 | Agent scaffolding utilities |
+| **Hackathon** | 3 | Pool status, code redemption, credit balance |
 
 **Total: 100+ tools**
 

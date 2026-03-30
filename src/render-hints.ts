@@ -807,4 +807,24 @@ export const RENDER_HINTS: Record<string, PrismRenderHint> = {
     highlightFields: ['name', 'type'],
     exampleCode: `<PrismStockTable data={platforms} />`,
   },
+
+  // Hackathon tools
+  hackathon_status: {
+    suggestedComponent: 'PrismMetricCard',
+    layout: 'card',
+    highlightFields: ['pool_total', 'pool_remaining', 'credits_per_user', 'is_active'],
+    exampleCode: `<PrismMetricCard title="Hackathon Pool" data={status} />`,
+  },
+  hackathon_redeem: {
+    suggestedComponent: 'PrismMetricCard',
+    layout: 'card',
+    highlightFields: ['api_key', 'credits', 'status'],
+    exampleCode: `<PrismMetricCard title="Hackathon Redemption" data={result} />`,
+  },
+  hackathon_my_credits: {
+    suggestedComponent: 'PrismMetricCard',
+    layout: 'card',
+    highlightFields: ['credits_total', 'credits_used', 'credits_remaining'],
+    exampleCode: `<PrismMetricCard title="My Hackathon Credits" data={credits} />`,
+  },
 };
