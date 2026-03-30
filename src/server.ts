@@ -24,6 +24,7 @@ import { registerTradesTools } from "./tools/trades.js";
 import { registerSocialTools } from "./tools/social.js";
 import { registerSportsTools } from "./tools/sports.js";
 import { registerOddsTools } from "./tools/odds.js";
+import { registerHackathonTools } from "./tools/hackathon.js";
 import { registerResources } from "./resources.js";
 
 export function createServer(): McpServer {
@@ -59,6 +60,9 @@ export function createServer(): McpServer {
   registerSocialTools(server);
   registerSportsTools(server);
   registerOddsTools(server);
+
+  // Hackathon tools
+  registerHackathonTools(server);
 
   // MCP Resources (20+ resources)
   registerResources(server);
