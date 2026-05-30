@@ -3,8 +3,11 @@ import { registerResolutionTools } from "./tools/resolution.js";
 import { registerMarketTools } from "./tools/market.js";
 import { registerDefiTools } from "./tools/defi.js";
 import { registerOnchainTools } from "./tools/onchain.js";
-import { registerAnalysisTools } from "./tools/analysis.js";
 import { registerNewsTools } from "./tools/news.js";
+// NOTE: tools/analysis.ts is intentionally NOT registered — its three tools
+// (technical_analysis, get_signals, get_risk) are the canonical versions in the
+// dedicated technicals.ts / signals.ts / risk.ts modules. Registering both made
+// the SDK throw "Tool ... is already registered" and the server failed to boot.
 import { registerPredictionTools } from "./tools/predictions.js";
 import { registerMacroTools } from "./tools/macro.js";
 import { registerDeveloperTools } from "./tools/developer.js";
@@ -26,19 +29,53 @@ import { registerSportsTools } from "./tools/sports.js";
 import { registerOddsTools } from "./tools/odds.js";
 import { registerResources } from "./resources.js";
 
+/** snake_case / kebab-case tool name → human-friendly Title Case. */
+function toTitle(name: string): string {
+  return name
+    .split(/[_-]/)
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ");
+}
+
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "prism-os",
     version: "2.0.0",
   });
 
+  // ── MCP spec modernization (2025-11) ──────────────────────────────────────
+  // Enrich every tool's metadata in one place so the per-domain tool modules
+  // stay terse and consistent. For each registered tool we:
+  //   1. derive a human-friendly `title` from the tool name when none is set
+  //      (the spec recommends a display title distinct from the machine `name`);
+  //   2. default read-only tools to idempotent + open-world hints — they read
+  //      live external market data — while letting any explicit annotation win.
+  // New tool modules automatically inherit this; nothing else needs to change.
+  const baseRegisterTool = server.registerTool.bind(server);
+  (server as unknown as { registerTool: typeof server.registerTool }).registerTool = ((
+    name: string,
+    config: Record<string, any>,
+    handler: any,
+  ) => {
+    const enriched: Record<string, any> = { ...config };
+    if (enriched.title == null) enriched.title = toTitle(name);
+    if (enriched.annotations?.readOnlyHint === true) {
+      enriched.annotations = {
+        idempotentHint: true,
+        openWorldHint: true,
+        ...enriched.annotations,
+      };
+    }
+    return baseRegisterTool(name, enriched as any, handler);
+  }) as typeof server.registerTool;
+
   // Original tools (21 tools)
   registerResolutionTools(server);
   registerMarketTools(server);
   registerDefiTools(server);
   registerOnchainTools(server);
-  registerAnalysisTools(server);
   registerNewsTools(server);
+  // registerAnalysisTools intentionally omitted — see import note above.
   registerPredictionTools(server);
   registerMacroTools(server);
   registerDeveloperTools(server);

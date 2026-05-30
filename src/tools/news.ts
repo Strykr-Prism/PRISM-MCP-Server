@@ -30,28 +30,7 @@ export function registerNewsTools(server: McpServer) {
     }
   );
 
-  server.registerTool(
-    "social_sentiment",
-    {
-      description: "Get social media sentiment for a crypto asset: bullish/bearish ratio, mention volume, and trending score.",
-      inputSchema: {
-        symbol: z.string().describe("Crypto symbol (e.g. 'BTC', 'ETH', 'SOL')"),
-      },
-      annotations: { readOnlyHint: true },
-      _meta: { 'x-prism-ui': RENDER_HINTS.social_sentiment },
-    },
-    async ({ symbol }) => {
-      const [sentiment, mentions, trending] = await Promise.all([
-        prism.social.getSentiment(symbol),
-        prism.social.getMentions(symbol),
-        prism.social.getTrendingScore(symbol),
-      ]);
-      return {
-        content: [{
-          type: "text",
-          text: JSON.stringify({ sentiment, mentions, trending, _ui: RENDER_HINTS.social_sentiment }, null, 2),
-        }],
-      };
-    }
-  );
+  // NOTE: `social_sentiment` is owned by the dedicated social module
+  // (tools/social.ts), which also exposes social_mentions and trending_score
+  // as discrete tools. It was previously duplicated here, breaking startup.
 }

@@ -76,24 +76,7 @@ export function registerMarketTools(server: McpServer) {
     }
   );
 
-  server.registerTool(
-    "get_stock_quote",
-    {
-      description: "Get a real-time stock quote with price, change, volume, and market cap.",
-      inputSchema: {
-        symbol: z.string().describe("Stock ticker (e.g. 'AAPL', 'TSLA', 'NVDA')"),
-      },
-      annotations: { readOnlyHint: true },
-      _meta: { 'x-prism-ui': RENDER_HINTS.get_stock_quote },
-    },
-    async ({ symbol }) => {
-      const result = await prism.stocks.getQuote(symbol);
-      return {
-        content: [{
-          type: "text",
-          text: JSON.stringify({ ...result, _ui: RENDER_HINTS.get_stock_quote }, null, 2),
-        }],
-      };
-    }
-  );
+  // NOTE: `get_stock_quote` is owned by the dedicated stocks module
+  // (tools/stocks.ts). It was previously also registered here, which made the
+  // SDK throw "Tool get_stock_quote is already registered" on startup.
 }
