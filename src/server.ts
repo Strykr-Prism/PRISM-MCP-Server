@@ -49,7 +49,10 @@ export function createServer(): McpServer {
   //   1. derive a human-friendly `title` from the tool name when none is set
   //      (the spec recommends a display title distinct from the machine `name`);
   //   2. default read-only tools to idempotent + open-world hints — they read
-  //      live external market data — while letting any explicit annotation win.
+  //      live external market data — while letting any explicit annotation win;
+  //   3. mirror each tool's JSON text output as `structuredContent` so hosts and
+  //      agents get machine-readable, typed data alongside the human-readable
+  //      text (MCP 2025-11 structured outputs), with zero per-tool schema work.
   // New tool modules automatically inherit this; nothing else needs to change.
   const baseRegisterTool = server.registerTool.bind(server);
   (server as unknown as { registerTool: typeof server.registerTool }).registerTool = ((
@@ -66,7 +69,34 @@ export function createServer(): McpServer {
         ...enriched.annotations,
       };
     }
-    return baseRegisterTool(name, enriched as any, handler);
+    const wrappedHandler = async (...args: any[]) => {
+      const result: any = await (handler as (...a: any[]) => any)(...args);
+      if (
+        result &&
+        Array.isArray(result.content) &&
+        result.structuredContent === undefined &&
+        !result.isError
+      ) {
+        const textBlock = result.content.find(
+          (c: any) => c?.type === "text" && typeof c.text === "string",
+        );
+        if (textBlock) {
+          try {
+            const parsed = JSON.parse(textBlock.text);
+            // structuredContent must be a JSON object at the top level; wrap
+            // arrays/primitives so list-returning tools still validate.
+            result.structuredContent =
+              parsed && typeof parsed === "object" && !Array.isArray(parsed)
+                ? parsed
+                : { result: parsed };
+          } catch {
+            /* output isn't JSON — leave as text-only */
+          }
+        }
+      }
+      return result;
+    };
+    return baseRegisterTool(name, enriched as any, wrappedHandler as any);
   }) as typeof server.registerTool;
 
   // Original tools (21 tools)
