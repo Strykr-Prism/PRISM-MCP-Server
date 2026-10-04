@@ -39,7 +39,7 @@ function toTitle(name: string): string {
 
 export function createServer(): McpServer {
   const server = new McpServer({
-    name: "prism-os",
+    name: "strykr-prism-mcp",
     version: "2.0.0",
   });
 

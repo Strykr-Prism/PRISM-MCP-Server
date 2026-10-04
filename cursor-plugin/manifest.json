@@ -1,6 +1,6 @@
 {
-  "name": "prism-os",
-  "displayName": "PRISM Financial Intelligence",
+  "name": "strykr-prism-mcp",
+  "displayName": "Prism by Strykr — Financial Intelligence",
   "version": "2.0.0",
   "description": "Access 218 financial data endpoints for crypto, stocks, DeFi, macro, predictions, and more. Powered by api.prismapi.ai.",
   "author": "Strykr",

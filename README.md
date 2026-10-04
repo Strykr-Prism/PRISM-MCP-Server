@@ -1,11 +1,11 @@
-# `@prism/mcp-server`
+# Prism by Strykr — MCP Server
 
-The **MCP server for AI agents that need real-time financial truth.** Drop it
+The **Prism by Strykr MCP server for AI agents that need real-time financial truth.** Drop it
 into Claude Desktop, Cursor, ChatGPT, OpenClaw, Hermes, or any MCP host and
-your agent inherits every PRISM tool — crypto, equities, on-chain,
+your agent inherits every Prism tool — crypto, equities, on-chain,
 prediction markets, and macro — behind one `PRISM_API_KEY`.
 
-- Package: `@prism/mcp-server` · Current: **1.0.1**
+- Package: `@strykr/prism-mcp` · Current: **1.1.1**
 - Runtime: Node.js 18+
 - Upstream API: <https://api.prismapi.ai>
 - Tool surface: **21 financial-data tools**
@@ -19,7 +19,7 @@ prediction markets, and macro — behind one `PRISM_API_KEY`.
 ### 1. One-click install (recommended)
 
 - **Cursor** and **VS Code** support deep-link MCP installs. The buttons on the
-  PRISM landing (<https://www.prismapi.ai/#connect>) handle the config write for
+  Prism landing (<https://www.prismapi.ai/#connect>) handle the config write for
   you in a single click.
 
 ### 2. Six-line MCP config (any host)
@@ -29,7 +29,7 @@ prediction markets, and macro — behind one `PRISM_API_KEY`.
   "mcpServers": {
     "prism": {
       "command": "npx",
-      "args": ["-y", "@prism/mcp-server"],
+      "args": ["-y", "@strykr/prism-mcp"],
       "env": { "PRISM_API_KEY": "prism_sk_..." }
     }
   }
@@ -95,7 +95,7 @@ npm run test  # vitest
 ## Promote an instant key into your account
 
 Got a `prism_sk_…` from path 3 above and want its usage to show up in your
-PRISM dashboard? Sign up, then paste it into **API Keys → Link Agent Key**:
+Prism dashboard? Sign up, then paste it into **API Keys → Link Agent Key**:
 <https://www.prismapi.ai/dashboard/keys>. The key is now owned by your
 account — same `prism_sk_…`, but billing + usage + the 7-day expiry attach
 to you.
@@ -107,5 +107,5 @@ to you.
 - This server depends on the `prism-os` SDK (workspace) — the published
   artifact bundles it via `prepack`, so consumers `npm i` with zero extra deps.
 - Keep this README aligned with `package.json` for version + tool-count
-  claims. Single source of truth for connect-method ordering is the PRISM
+  claims. Single source of truth for connect-method ordering is the Prism
   landing's `ConnectYourAgent` section.

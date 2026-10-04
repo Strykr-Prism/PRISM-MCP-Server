@@ -1,11 +1,16 @@
 {
-  "name": "@prism/mcp-server",
-  "version": "1.1.0",
-  "description": "PRISM OS MCP Server \u2014 21 financial-data tools for Claude Desktop & Claude Code",
+  "name": "@strykr/prism-mcp",
+  "version": "1.1.1",
+  "description": "Strykr PRISM MCP Server — 21 financial-data tools for Claude Desktop, Cursor, and any MCP host",
   "main": "dist/index.js",
   "bin": {
-    "prism-mcp": "dist/index.js"
+    "strykr-prism-mcp": "dist/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Strykr-Prism/PRISM-MCP-Server.git"
+  },
+  "homepage": "https://strykr.ai/prism",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
